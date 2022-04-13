@@ -70,7 +70,8 @@ def build_tables():
     }
     keycode_template = r'^keycode\s+(\d+)\s+=(.*?)$'
     try:
-        dump = check_output(['dumpkeys', '--keys-only'], universal_newlines=True)
+        # --full-table provides one line per key code with different modifier combinations per row
+        dump = check_output(['dumpkeys', '--full-table'], universal_newlines=True)
     except CalledProcessError as e:
         if e.returncode == 1:
             raise ValueError('Failed to run dumpkeys to get key names. Check if your user is part of the "tty" group, and if not, add it with "sudo usermod -a -G tty USER".')
@@ -80,6 +81,7 @@ def build_tables():
 
     for str_scan_code, str_names in re.findall(keycode_template, dump, re.MULTILINE):
         scan_code = int(str_scan_code)
+        # i is row number
         for i, str_name in enumerate(str_names.strip().split()):
             modifiers = tuple(sorted(modifier for modifier, bit in modifiers_bits.items() if i & bit))
             name, is_keypad = cleanup_key(str_name)
